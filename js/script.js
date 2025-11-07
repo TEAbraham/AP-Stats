@@ -12,7 +12,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider
-const allowedDomains = ["thsrocks.us", "bishopmcdevitt.org", "hbgdiocese.org"];
+const allowedDomains = ["thsrocks.us", "bishopmcdevitt.org", "hbgdiocese.org", "gmail.com"];
 
 
 provider.addScope('https://www.googleapis.com/auth/classroom.courses.readonly');
