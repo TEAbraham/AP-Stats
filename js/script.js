@@ -12,7 +12,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider
-const allowedDomains = ["thsrocks.us", "bishopmcdevitt.org", "hbgdiocese.org", "gmail.com"];
 
 
 provider.addScope('https://www.googleapis.com/auth/classroom.courses.readonly');
@@ -114,11 +113,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-function isAllowedDomain(email) {
-  const domain = email.split("@")[1]?.toLowerCase();
-  return allowedDomains.includes(domain);
-}
-
 
 window.showTab = (tab) => {
   document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
@@ -135,11 +129,6 @@ window.signUp = () => {
 
   if (!email || !password || !confirmPassword) {
     alert("Please fill out all fields.");
-    return;
-  }
-
-  if (!isAllowedDomain(email)) {
-    alert("Only emails from allowed domains can sign up.");
     return;
   }
 
@@ -169,11 +158,6 @@ window.login = () => {
 
   if (!email || !password) {
     alert("Please enter both email and password.");
-    return;
-  }
-
-  if (!isAllowedDomain(email)) {
-    alert("Only emails from thsrocks.us, bishopmcdevitt.org, or hbgdiocese.org  can log in.");
     return;
   }
 
