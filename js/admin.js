@@ -11,7 +11,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const allowedEmails = ["tabraham@thsrocks.us"];
+    const allowedEmails = ["thomas.e.abraham@gmail.com"];
     
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -25,7 +25,7 @@
     
       // 🔐 Get admin claim
       const token = await user.getIdTokenResult();
-      const isAdmin = token.claims.admin === true;
+      const isAdmin = token.claims.admin === true && allowedEmails.includes(user.email);
 
       if (isAdmin) {
         loadDashboard();       // show full dashboard
@@ -114,7 +114,7 @@ async function loadStudentSummary() {
       value: data.totalPointsEarned || 0,
       attempted: data.totalAttempted || 0,
       possible: data.totalPointsPossible || 0,
-      role: email === "tabraham@thsrocks.us" ? "teacher" : "student"
+      role: email === "thomas.e.abraham@gmail.com" ? "teacher" : "student"
     });
   });
 

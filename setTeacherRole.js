@@ -4,7 +4,7 @@ admin.initializeApp({
   credential: admin.credential.applicationDefault()
 });
 
-const email = "tabraham@thsrocks.us"; // 👈 your teacher email
+const email = "thomas.e.abraham@gmail.com"; // 👈 your teacher email
 
 admin.auth().getUserByEmail(email)
   .then(user => {

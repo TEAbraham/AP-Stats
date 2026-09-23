@@ -4,12 +4,12 @@ admin.initializeApp({
   credential: admin.credential.applicationDefault(),
 });
 
-// ✅ Replace this with the actual UID you want to make admin
-const uid = "cvBVSfct5rQaD0gz70OZsy34oAB2";
+const email = "thomas.e.abraham@gmail.com"; // 👈 your admin email
 
-admin.auth().setCustomUserClaims(uid, { admin: true })
+admin.auth().getUserByEmail(email)
+  .then(user => admin.auth().setCustomUserClaims(user.uid, { admin: true }))
   .then(() => {
-    console.log(`✅ Admin claim added to ${uid}`);
+    console.log(`✅ Admin claim added to ${email}`);
     process.exit(0);
   })
   .catch((error) => {
