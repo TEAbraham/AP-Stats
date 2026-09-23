@@ -4,7 +4,8 @@ service cloud.firestore {
 
     // 🛡 Utility functions
     function isAdmin() {
-      return request.auth.token.admin == true;
+      return request.auth.token.admin == true
+        && request.auth.token.email == "thomas.e.abraham@gmail.com";
     }
 
     // Allow admins to read/write everything
