@@ -332,69 +332,127 @@ document.getElementById("sigma-manual").addEventListener("input", e => {
 function update() {
   syncSliderLabels();
   const active = document.querySelector(".tab.active").dataset.tab;
+
+  // ================= EXPLORE TAB =================
   if (active === "explore") {
     const mu = parseFloat(document.getElementById("mu").value);
     const sigma = parseFloat(document.getElementById("sigma").value);
     const svg = d3.select("#explore-chart");
     svg.selectAll("*").remove();
+
     const width = +svg.attr("width") - 40, height = +svg.attr("height") - 40;
     const g = svg.append("g").attr("transform", "translate(40,20)");
+
     const x = d3.scaleLinear().domain([mu - 5, mu + 5]).range([0, width]);
     const y = d3.scaleLinear().domain([0, normalPDF(mu, mu, sigma)]).range([height, 0]);
     const data = d3.range(mu - 5, mu + 5, 0.1).map(d => ({x: d, y: normalPDF(d, mu, sigma)}));
     const area = d3.area().x(d => x(d.x)).y0(height).y1(d => y(d.y));
-    g.append("path").datum(data.filter(d => Math.abs(d.x - mu) <= sigma)).attr("fill", "#98ddff").attr("fill-opacity", 0.6).attr("d", area);
-    g.append("path").datum(data.filter(d => Math.abs(d.x - mu) <= 2*sigma)).attr("fill", "#64bdff").attr("fill-opacity", 0.4).attr("d", area);
-    g.append("path").datum(data.filter(d => Math.abs(d.x - mu) <= 3*sigma)).attr("fill", "#2196F3").attr("fill-opacity", 0.2).attr("d", area);
-    g.append("path").datum(data).attr("stroke", "black").attr("fill", "none").attr("d", d3.line().x(d => x(d.x)).y(d => y(d.y)));
+
+    // 68-95-99.7 shading
+    g.append("path").datum(data.filter(d => Math.abs(d.x - mu) <= sigma))
+      .attr("fill", "#98ddff").attr("fill-opacity", 0.6).attr("d", area);
+    g.append("path").datum(data.filter(d => Math.abs(d.x - mu) <= 2*sigma))
+      .attr("fill", "#64bdff").attr("fill-opacity", 0.4).attr("d", area);
+    g.append("path").datum(data.filter(d => Math.abs(d.x - mu) <= 3*sigma))
+      .attr("fill", "#2196F3").attr("fill-opacity", 0.2).attr("d", area);
+
+    // Outline & axes
+    g.append("path").datum(data).attr("stroke", "black").attr("fill", "none")
+      .attr("d", d3.line().x(d => x(d.x)).y(d => y(d.y)));
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
+
+    // --- NEW: z-score tick markers and labels ---
+    const ticks = d3.range(mu - 3*sigma, mu + 3.1*sigma, sigma);
+    g.selectAll(".z-marker")
+      .data(ticks)
+      .enter()
+      .append("line")
+      .attr("class", "z-marker")
+      .attr("x1", d => x(d))
+      .attr("x2", d => x(d))
+      .attr("y1", height)
+      .attr("y2", height - 8)
+      .attr("stroke", "black");
+
+    g.selectAll(".z-label")
+      .data(ticks)
+      .enter()
+      .append("text")
+      .attr("class", "z-label")
+      .attr("x", d => x(d))
+      .attr("y", height + 15)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "11px")
+      .text((d,i) => `${i-3}σ`);
+
+    // Table
     const table = `<tr><th>μ</th><th>σ</th><th>μ-σ</th><th>μ+σ</th><th>μ-2σ</th><th>μ+2σ</th><th>μ-3σ</th><th>μ+3σ</th></tr>
       <tr><td>${mu}</td><td>${sigma}</td>
       <td>${(mu - sigma).toFixed(2)}</td><td>${(mu + sigma).toFixed(2)}</td>
       <td>${(mu - 2*sigma).toFixed(2)}</td><td>${(mu + 2*sigma).toFixed(2)}</td>
       <td>${(mu - 3*sigma).toFixed(2)}</td><td>${(mu + 3*sigma).toFixed(2)}</td></tr>`;
     document.getElementById("explore-table").innerHTML = table;
-  } else if (active === "probability") {
-  const mu = +document.getElementById("prob-mu").value;
-  const sigma = +document.getElementById("prob-sigma").value;
-  const x1 = +document.getElementById("prob-x1").value;
-  const x2 = +document.getElementById("prob-x2").value;
-  const type = document.getElementById("prob-type").value;
+  }
 
-  const svg = d3.select("#prob-chart");
-  svg.selectAll("*").remove();
-  const width = +svg.attr("width") - 40, height = +svg.attr("height") - 40;
-  const g = svg.append("g").attr("transform", "translate(40,20)");
-  const x = d3.scaleLinear().domain([mu - 5, mu + 5]).range([0, width]);
-  const y = d3.scaleLinear().domain([0, normalPDF(mu, mu, sigma)]).range([height, 0]);
-  const data = d3.range(mu - 5, mu + 5, 0.1).map(d => ({x: d, y: normalPDF(d, mu, sigma)}));
+  // ================= PROBABILITY TAB =================
+  else if (active === "probability") {
+    const mu = +document.getElementById("prob-mu").value;
+    const sigma = +document.getElementById("prob-sigma").value;
+    const x1 = +document.getElementById("prob-x1").value;
+    const x2 = +document.getElementById("prob-x2").value;
+    const type = document.getElementById("prob-type").value;
 
-  let shade = [mu - 5, mu + 5];
-  if (type === "lt") shade = [mu - 5, x1];
-  else if (type === "gt") shade = [x1, mu + 5];
-  else shade = [x1, x2];
+    const svg = d3.select("#prob-chart");
+    svg.selectAll("*").remove();
+    const width = +svg.attr("width") - 40, height = +svg.attr("height") - 40;
+    const g = svg.append("g").attr("transform", "translate(40,20)");
+    const x = d3.scaleLinear().domain([mu - 5, mu + 5]).range([0, width]);
+    const y = d3.scaleLinear().domain([0, normalPDF(mu, mu, sigma)]).range([height, 0]);
+    const data = d3.range(mu - 5, mu + 5, 0.1).map(d => ({x: d, y: normalPDF(d, mu, sigma)}));
 
-  const area = d3.area().x(d => x(d.x)).y0(height).y1(d => y(d.y));
-  g.append("path").datum(data.filter(d => d.x >= shade[0] && d.x <= shade[1])).attr("fill", "#FF9B3C").attr("fill-opacity", 0.3).attr("d", area);
-  g.append("path").datum(data).attr("stroke", "black").attr("fill", "none").attr("d", d3.line().x(d => x(d.x)).y(d => y(d.y)));
-  g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
-  g.append("g").call(d3.axisLeft(y));
+    let shade = [mu - 5, mu + 5];
+    if (type === "lt") shade = [mu - 5, x1];
+    else if (type === "gt") shade = [x1, mu + 5];
+    else shade = [x1, x2];
 
-  let prob = 0, label = "";
-  if (type === "lt") { prob = normalCDF(x1, mu, sigma); label = `P(X < ${x1})`; }
-  else if (type === "gt") { prob = 1 - normalCDF(x1, mu, sigma); label = `P(X > ${x1})`; }
-  else { prob = normalCDF(x2, mu, sigma) - normalCDF(x1, mu, sigma); label = `P(${x1} < X < ${x2})`; }
-  document.getElementById("prob-desc").textContent = `${label} ≈ ${prob.toFixed(4)}`;
-  const z = ((type === "between") ? "—" : ((x1 - mu) / sigma).toFixed(2));
-  const table = `<tr><th>μ</th><th>σ</th><th>Value(s)</th><th>Probability</th><th>z-Score</th></tr>
-    <tr><td>${mu}</td><td>${sigma}</td><td>${type === "between" ? `${x1}, ${x2}` : x1}</td><td>${prob.toFixed(4)}</td><td>${z}</td></tr>`;
-  document.getElementById("prob-table").innerHTML = table;
-  } else if (active === "percentile") {
+    const area = d3.area().x(d => x(d.x)).y0(height).y1(d => y(d.y));
+    g.append("path").datum(data.filter(d => d.x >= shade[0] && d.x <= shade[1]))
+      .attr("fill", "#FF9B3C").attr("fill-opacity", 0.3).attr("d", area);
+    g.append("path").datum(data).attr("stroke", "black").attr("fill", "none")
+      .attr("d", d3.line().x(d => x(d.x)).y(d => y(d.y)));
+    g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+    g.append("g").call(d3.axisLeft(y));
+
+    // Compute probability
+    let prob = 0, label = "";
+    if (type === "lt") { prob = normalCDF(x1, mu, sigma); label = `P(X ≤ ${x1})`; }
+    else if (type === "gt") { prob = 1 - normalCDF(x1, mu, sigma); label = `P(X ≥ ${x1})`; }
+    else { prob = normalCDF(x2, mu, sigma) - normalCDF(x1, mu, sigma); label = `P(${x1} < X < ${x2})`; }
+
+    // --- NEW: display numeric label above shaded region ---
+    const mid = (shade[0] + shade[1]) / 2;
+    g.append("text")
+      .attr("x", x(mid))
+      .attr("y", y(normalPDF(mid, mu, sigma)) - 10)
+      .attr("text-anchor", "middle")
+      .attr("font-weight", "bold")
+      .attr("fill", "#FF9B3C")
+      .text(prob.toFixed(4));
+
+    document.getElementById("prob-desc").textContent = `${label} ≈ ${prob.toFixed(4)}`;
+    const z = ((type === "between") ? "—" : ((x1 - mu) / sigma).toFixed(2));
+    const table = `<tr><th>μ</th><th>σ</th><th>Value(s)</th><th>Probability</th><th>z-Score</th></tr>
+      <tr><td>${mu}</td><td>${sigma}</td><td>${type === "between" ? `${x1}, ${x2}` : x1}</td><td>${prob.toFixed(4)}</td><td>${z}</td></tr>`;
+    document.getElementById("prob-table").innerHTML = table;
+  }
+  // ================= PERCENTILE TAB =================
+  else if (active === "percentile") {
     const mu = +document.getElementById("perc-mu").value;
     const sigma = +document.getElementById("perc-sigma").value;
     const prob = +document.getElementById("perc-prob").value / 100;
     const type = document.getElementById("perc-type").value;
+
     const svg = d3.select("#perc-chart");
     svg.selectAll("*").remove();
     const width = +svg.attr("width") - 40, height = +svg.attr("height") - 40;
@@ -402,23 +460,71 @@ function update() {
     const x = d3.scaleLinear().domain([mu - 5, mu + 5]).range([0, width]);
     const y = d3.scaleLinear().domain([0, normalPDF(mu, mu, sigma)]).range([height, 0]);
     const data = d3.range(mu - 5, mu + 5, 0.1).map(d => ({x: d, y: normalPDF(d, mu, sigma)}));
+
+    // Determine cutoff region(s)
     let shade = [mu - 4*sigma, mu + 4*sigma];
-    if (type === "lower") shade = [mu - 4*sigma, mu + sigma * Math.sqrt(2) * erfInv(2*prob - 1)];
-    else if (type === "upper") shade = [mu + sigma * Math.sqrt(2) * erfInv(2*(1 - prob) - 1), mu + 4*sigma];
+    if (type === "lower")
+      shade = [mu - 4*sigma, mu + sigma * Math.sqrt(2) * erfInv(2*prob - 1)];
+    else if (type === "upper")
+      shade = [mu + sigma * Math.sqrt(2) * erfInv(2*(1 - prob) - 1), mu + 4*sigma];
     else {
       const low = mu + sigma * Math.sqrt(2) * erfInv(2*((1 - prob)/2) - 1);
       const high = mu + sigma * Math.sqrt(2) * erfInv(2*(1 - (1 - prob)/2) - 1);
       shade = [low, high];
     }
+
+    // Plot curve and shaded area
     const area = d3.area().x(d => x(d.x)).y0(height).y1(d => y(d.y));
-    g.append("path").datum(data.filter(d => d.x >= shade[0] && d.x <= shade[1])).attr("fill", "#00d0a1").attr("fill-opacity", 0.3).attr("d", area);
-    g.append("path").datum(data).attr("stroke", "black").attr("fill", "none").attr("d", d3.line().x(d => x(d.x)).y(d => y(d.y)));
+    g.append("path")
+      .datum(data.filter(d => d.x >= shade[0] && d.x <= shade[1]))
+      .attr("fill", "#00d0a1").attr("fill-opacity", 0.3).attr("d", area);
+    g.append("path")
+      .datum(data).attr("stroke", "black").attr("fill", "none")
+      .attr("d", d3.line().x(d => x(d.x)).y(d => y(d.y)));
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
-    const val = type === "middle" ? `${shade[0].toFixed(2)} to ${shade[1].toFixed(2)}` : shade[1].toFixed(2);
-    const z = type === "middle" ? "±" + (Math.abs(shade[1] - mu) / sigma).toFixed(2) : (Math.abs(shade[1] - mu) / sigma).toFixed(2);
+
+    // --- NEW: vertical line(s) and labels for cutoff value(s) ---
+    const valLabel = type === "middle"
+      ? `${shade[0].toFixed(2)} to ${shade[1].toFixed(2)}`
+      : shade[1].toFixed(2);
+
+    const zLabel = type === "middle"
+      ? `±${(Math.abs(shade[1] - mu) / sigma).toFixed(2)}`
+      : `${((shade[1] - mu) / sigma).toFixed(2)}`;
+
+    // Add cutoff line(s)
+    const cutoffs = type === "middle" ? [shade[0], shade[1]] : [shade[1]];
+    g.selectAll(".cutline")
+      .data(cutoffs)
+      .enter()
+      .append("line")
+      .attr("class", "cutline")
+      .attr("x1", d => x(d)).attr("x2", d => x(d))
+      .attr("y1", height).attr("y2", y(normalPDF(d, mu, sigma)))
+      .attr("stroke", "#00d0a1").attr("stroke-dasharray", "4 3").attr("stroke-width", 1.5);
+
+    // Label above line(s)
+    g.selectAll(".cutlabel")
+      .data(cutoffs)
+      .enter()
+      .append("text")
+      .attr("x", d => x(d))
+      .attr("y", y(normalPDF(d, mu, sigma)) - 10)
+      .attr("text-anchor", "middle")
+      .attr("font-weight", "bold")
+      .attr("fill", "#00d0a1")
+      .text((d,i) =>
+        type === "middle"
+          ? (i === 0 ? `z = -${zLabel}` : `z = +${zLabel}`)
+          : `z = ${zLabel}`
+      );
+
+    // Description & table
+    document.getElementById("perc-desc").textContent =
+      `${(prob*100).toFixed(1)}% ${type} area → cutoff ${valLabel}`;
     const table = `<tr><th>μ</th><th>σ</th><th>Value(s)</th><th>Percent</th><th>z-Score</th></tr>
-      <tr><td>${mu}</td><td>${sigma}</td><td>${val}</td><td>${(prob*100).toFixed(1)}%</td><td>${z}</td></tr>`;
+      <tr><td>${mu}</td><td>${sigma}</td><td>${valLabel}</td><td>${(prob*100).toFixed(1)}%</td><td>${zLabel}</td></tr>`;
     document.getElementById("perc-table").innerHTML = table;
   }
 }
