@@ -13,7 +13,13 @@
 
   "hosting": {
     "public": ".",
-    "ignore": [ "firebase.json","**/.*","**/node_modules/**" ],
+    "ignore": [
+      "firebase.json", "**/.*", "**/node_modules/**",
+      "*.json", "*.log", "*.mjs", "*.md",
+      "functions/**", "dataconnect/**",
+      "setAdminRole.js", "setTeacherRole.js", "upload_*.js",
+      "backfill*", "check_claims.html"
+    ],
     "port": 5005
   },
 

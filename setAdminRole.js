@@ -1,10 +1,7 @@
 const admin = require("firebase-admin");
 
-// ✅ Point to your service account key
-const serviceAccount = require("./admin-key.json");
-
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.applicationDefault(),
 });
 
 // ✅ Replace this with the actual UID you want to make admin

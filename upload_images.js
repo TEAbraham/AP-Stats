@@ -2,11 +2,8 @@ const admin = require("firebase-admin");
 const fs = require("fs");
 const path = require("path");
 
-// Init Firebase Admin
-const serviceAccount = require("./admin-key.json");
-
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.applicationDefault(),
   storageBucket: "ap-statistics.firebasestorage.app", // 🔄 your real bucket name!
 });
 

@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 
 admin.initializeApp({
-  credential: admin.credential.cert(require("./admin-key.json"))
+  credential: admin.credential.applicationDefault()
 });
 
 const email = "tabraham@thsrocks.us"; // 👈 your teacher email

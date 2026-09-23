@@ -73,3 +73,5 @@ node_modules/
 node_modules/
 mcq-uploader/
 ../admin-key.json
+# Claude Code project notes (kept local)
+CLAUDE.md

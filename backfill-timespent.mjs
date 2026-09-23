@@ -1,10 +1,7 @@
 import admin from "firebase-admin";
-import { readFile } from "fs/promises";
-
-const serviceAccount = JSON.parse(await readFile("./admin-key.json"));
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.applicationDefault()
 });
 
 const db = admin.firestore();
